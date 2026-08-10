@@ -421,41 +421,192 @@ curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
 <!-- DOCS -->
 <section id="docs">
   <div class="wrap">
-    <h2>Getting started<span style="color:var(--blue)">.</span></h2>
-    <p class="section-sub">Everything you need to make your first call.</p>
+    <h2>Documentation<span style="color:var(--blue)">.</span></h2>
+    <p class="section-sub">Everything you need to integrate the API.</p>
 
+    <!-- Quick Reference -->
     <div class="doc-item">
-      <h4>Authentication</h4>
-      <p>Pass your key as a Bearer token on every request:</p>
-      <p><code>Authorization: Bearer x3k_live_YOUR_KEY</code></p>
+      <h4>Quick Reference</h4>
+      <p><strong>Authentication:</strong> <code>Authorization: Bearer x3k_live_YOUR_KEY</code></p>
+      <p><strong>Endpoint:</strong> <code>POST https://alpha.x3digitalcapital.com/api/v1/analyze</code></p>
+      <p><strong>Required fields:</strong> <code>symbol</code>, <code>direction</code>, <code>entry</code>, <code>exit</code>, <code>qty</code></p>
+      <p><strong>Rate limit:</strong> 20 calls/minute · <strong>Quota:</strong> 500 analyses/month</p>
     </div>
 
-    <div class="doc-item">
-      <h4>Endpoint</h4>
-      <p><code>POST https://alpha.x3digitalcapital.com/api/v1/analyze</code></p>
+    <!-- Toggle for Full Docs -->
+    <div style="text-align:center; margin:32px 0;">
+      <button id="docsToggle" class="btn-docs-toggle">View Complete Documentation →</button>
     </div>
 
-    <div class="doc-item">
-      <h4>Trade format</h4>
-      <p>Required per trade: <code>symbol</code>, <code>direction</code> (long / short), <code>entry</code>, <code>exit</code>, <code>qty</code>. Optional fields like dates and notes improve the analysis.</p>
-    </div>
+    <!-- Full Documentation (Hidden by default) -->
+    <div id="fullDocs" style="display:none;">
 
-    <div class="doc-item">
-      <h4>Response</h4>
-      <p>Metrics (netPL, winRate, profitFactor, averages), AI scores across five dimensions, a letter grade, strengths, severity-ranked risk flags, and prioritized recommendations.</p>
-    </div>
+      <!-- 1. Make Your First Call -->
+      <div class="doc-item">
+        <h4>1. Make your first API call</h4>
+        <p>Use the API key we sent you via email. Replace <code>YOUR_KEY</code> with your actual key:</p>
+        <div class="code"><pre><span class="c"># Analyze a single trade</span>
+curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
+  -H <span class="k">"Authorization: Bearer x3k_live_YOUR_KEY"</span> \
+  -H <span class="k">"Content-Type: application/json"</span> \
+  -d '{
+    "trades": [
+      {
+        "symbol": "XRP",
+        "direction": "long",
+        "entry": 0.5,
+        "exit": 1.2,
+        "qty": 100,
+        "date": "2026-08-09",
+        "notes": "Breakout trade, hit resistance"
+      }
+    ]
+  }'</pre></div>
+      </div>
 
-    <div class="doc-item">
-      <h4>Rate limits</h4>
-      <p>20 calls per minute per key. Monthly usage is metered per key and available on request.</p>
-    </div>
+      <!-- 2. Request Format -->
+      <div class="doc-item">
+        <h4>2. Request format</h4>
+        <p><strong>Required fields per trade:</strong></p>
+        <ul style="margin:10px 0 10px 20px; line-height:1.8;">
+          <li><code>symbol</code> (string): Ticker symbol (e.g., "XRP", "BTC", "ETH")</li>
+          <li><code>direction</code> (string): "long" or "short"</li>
+          <li><code>entry</code> (number): Entry price</li>
+          <li><code>exit</code> (number): Exit price</li>
+          <li><code>qty</code> (number): Quantity traded (must be > 0)</li>
+        </ul>
+        <p><strong>Optional fields (improve analysis):</strong></p>
+        <ul style="margin:10px 0 10px 20px; line-height:1.8;">
+          <li><code>date</code> (string): Trade date (YYYY-MM-DD)</li>
+          <li><code>notes</code> (string): Entry/exit reasoning, setup, market context</li>
+        </ul>
+        <p><strong>Limits:</strong> Up to 100 trades per request.</p>
+      </div>
 
-    <div class="doc-item">
-      <h4>Support</h4>
-      <p>Questions, feature requests, integration help: <code>api@x3digitalcapital.com</code></p>
+      <!-- 3. Response Explained -->
+      <div class="doc-item">
+        <h4>3. Understanding the response</h4>
+        <p><strong>Metrics (calculated):</strong></p>
+        <ul style="margin:10px 0 10px 20px; line-height:1.8;">
+          <li><code>netPL</code>: Total profit/loss across all trades</li>
+          <li><code>winRate</code>: Percentage of winning trades (0-100)</li>
+          <li><code>profitFactor</code>: Sum of wins ÷ sum of losses. >1 is profitable.</li>
+          <li><code>avgWin</code>: Average profit on winning trades</li>
+          <li><code>avgLoss</code>: Average loss on losing trades</li>
+        </ul>
+        <p><strong>AI Scores (0-100):</strong></p>
+        <ul style="margin:10px 0 10px 20px; line-height:1.8;">
+          <li><code>overall</code>: Overall trading quality</li>
+          <li><code>riskManagement</code>: How well you control losses</li>
+          <li><code>consistency</code>: Trade-to-trade reliability</li>
+          <li><code>discipline</code>: Following methodology without emotion</li>
+          <li><code>edgeClarity</code>: How repeatable your edge is</li>
+        </ul>
+        <p><strong>Grade:</strong> A (90+), B (80+), C (70+), D (60+), F (<60)</p>
+        <p><strong>Risk Flags:</strong> Severity-ranked (high/medium/low) alerts for missing stops, tiny samples, no dates, etc.</p>
+        <p><strong>Recommendations:</strong> Prioritized actions to improve your trading.</p>
+      </div>
+
+      <!-- 4. Error Responses -->
+      <div class="doc-item">
+        <h4>4. Error responses</h4>
+        <p><strong>Invalid trade data:</strong></p>
+        <div class="code"><pre>{
+  "error": "invalid_trade",
+  "message": "Each trade needs: symbol, direction, entry, exit, qty"
+}</pre></div>
+        <p><strong>Monthly quota exceeded:</strong></p>
+        <div class="code"><pre>{
+  "error": "Monthly quota exceeded",
+  "message": "You've used all 500 analyses for this month. Your quota resets on the 1st (UTC).",
+  "quota": {
+    "tier": "Professional",
+    "used": 500,
+    "limit": 500,
+    "remaining": 0,
+    "resetTime": "1st of next month (UTC)"
+  }
+}</pre></div>
+        <p><strong>Unauthorized (invalid API key):</strong></p>
+        <div class="code"><pre>{
+  "error": "Unauthorized",
+  "message": "Invalid or missing API key"
+}</pre></div>
+      </div>
+
+      <!-- 5. Portfolio Example -->
+      <div class="doc-item">
+        <h4>5. Example: Portfolio analysis (5 trades)</h4>
+        <div class="code"><pre><span class="c"># Analyze a portfolio of trades</span>
+curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
+  -H <span class="k">"Authorization: Bearer x3k_live_YOUR_KEY"</span> \
+  -H <span class="k">"Content-Type: application/json"</span> \
+  -d '{
+    "trades": [
+      {"symbol":"XRP","direction":"long","entry":0.50,"exit":0.75,"qty":100,"date":"2026-08-05"},
+      {"symbol":"BTC","direction":"short","entry":45000,"exit":42000,"qty":0.1,"date":"2026-08-06"},
+      {"symbol":"ETH","direction":"long","entry":2000,"exit":1950,"qty":1,"date":"2026-08-07"},
+      {"symbol":"XRP","direction":"long","entry":0.75,"exit":1.10,"qty":50,"date":"2026-08-08"},
+      {"symbol":"SOL","direction":"long","entry":150,"exit":160,"qty":10,"date":"2026-08-09"}
+    ]
+  }'</pre></div>
+      </div>
+
+      <!-- 6. Rate Limits -->
+      <div class="doc-item">
+        <h4>6. Rate limits & quotas</h4>
+        <p><strong>Rate limit:</strong> 20 calls per minute per API key</p>
+        <p><strong>Monthly quota:</strong> 500 analyses per month per key (resets 1st UTC)</p>
+        <p><strong>Check your usage:</strong> Every response includes a <code>usage</code> object showing your current month's call count and remaining quota.</p>
+      </div>
+
+      <!-- 7. Support -->
+      <div class="doc-item">
+        <h4>7. Support & questions</h4>
+        <p>Email: <code>api@x3digitalcapital.com</code></p>
+        <p>Questions about integration, features, or rate limits? We're here to help.</p>
+      </div>
+
     </div>
   </div>
 </section>
+
+<style>
+  .btn-docs-toggle {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.08em;
+  }
+  .btn-docs-toggle:hover {
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.5);
+    transform: translateY(-2px);
+  }
+  #fullDocs { margin-top: 32px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script>
+  document.getElementById('docsToggle').addEventListener('click', function() {
+    const fullDocs = document.getElementById('fullDocs');
+    const btn = this;
+    if (fullDocs.style.display === 'none') {
+      fullDocs.style.display = 'block';
+      btn.textContent = '← Hide Complete Documentation';
+    } else {
+      fullDocs.style.display = 'none';
+      btn.textContent = 'View Complete Documentation →';
+    }
+  });
+</script>
 
 <!-- FINAL CTA -->
 <section class="final">
