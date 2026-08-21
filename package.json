@@ -1,0 +1,36 @@
+{
+  "name": "x3-api-x402-backend",
+  "version": "1.0.0",
+  "description": "X3 API - Trade Intelligence API with x402 micropayments",
+  "type": "module",
+  "main": "x3-api-x402-server.js",
+  "scripts": {
+    "start": "node x3-api-x402-server.js",
+    "dev": "node --watch x3-api-x402-server.js",
+    "test": "echo \"Run: purl http://localhost:4242/api/v1/x402/analyze\""
+  },
+  "keywords": [
+    "x402",
+    "stripe",
+    "micropayments",
+    "trade",
+    "intelligence",
+    "api"
+  ],
+  "author": "X3 Digital Capital",
+  "license": "MIT",
+  "dependencies": {
+    "@coinbase/x402": "^2.1.0",
+    "@hono/node-server": "^1.19.17",
+    "@x402/core": "^2.23.0",
+    "@x402/evm": "^2.23.0",
+    "@x402/hono": "^2.23.0",
+    "dotenv": "^16.6.1",
+    "hono": "^4.13.3",
+    "stripe": "^15.12.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

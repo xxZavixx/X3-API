@@ -210,64 +210,45 @@
   }
   .plist li:last-child{border-bottom:none}
   .plist li:before{
-    content:"✓";position:absolute;left:2px;color:var(--blue);font-weight:700;
+    content:'✔';position:absolute;left:0;color:var(--blue);font-weight:bold;
   }
-
-  /* ---------- DOCS ---------- */
-  .doc-item{
-    background:var(--bg-card);
-    border:1px solid var(--border);
-    border-left:3px solid var(--blue);
-    border-radius:14px;
-    padding:22px 24px;
-    margin-bottom:14px;
-  }
-  .doc-item h4{
-    color:var(--blue-soft);font-size:15px;font-weight:600;
-    letter-spacing:.04em;margin-bottom:8px;
-  }
-  .doc-item p{color:var(--text-dim);font-weight:300;font-size:14.5px;margin-bottom:6px}
-  .doc-item code{
-    font-family:'Courier New',monospace;
-    background:#070c14;color:#8ec2ff;
-    padding:2px 8px;border-radius:6px;font-size:13px;
-    border:1px solid var(--border);
-  }
-
-  /* ---------- FINAL CTA ---------- */
-  .final{
-    text-align:center;
-    padding:70px 0 84px;
-  }
-  .final h2{margin-bottom:16px}
-  .final p{color:var(--text-dim);font-weight:300;max-width:520px;margin:0 auto 36px}
 
   /* ---------- FOOTER ---------- */
   footer{
+    background:var(--bg-card);
     border-top:1px solid var(--border);
-    padding:46px 0 40px;
+    padding:44px 0 22px;
+    margin-top:60px;
   }
   .foot-links{
-    display:flex;flex-wrap:wrap;gap:14px 36px;
-    margin-bottom:30px;
+    display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;
   }
   .foot-links a{
-    color:var(--text-dim);text-decoration:none;font-size:14px;
+    color:var(--text-dim);text-decoration:none;font-size:13px;
     transition:color .2s;
   }
   .foot-links a:hover{color:var(--blue-soft)}
   .disclaimer{
-    color:var(--text-faint);font-weight:300;
-    font-size:14px;line-height:1.8;max-width:900px;
-    margin-bottom:22px;
+    color:var(--text-faint);font-weight:300;font-size:12px;
+    line-height:1.6;margin-bottom:10px;max-width:820px;
   }
-  .copyright{color:var(--text-faint);font-size:13px}
+  .copyright{color:var(--text-faint);font-weight:300;font-size:12px}
 
-  @media (max-width:640px){
-    .nav-links a.hideMobile{display:none}
-    .hero{padding:56px 0 40px}
-    section{padding:38px 0}
-    .card{padding:26px 20px}
+  /* ---------- FINAL CTA ---------- */
+  .final{
+    background:linear-gradient(135deg, rgba(91,163,245,.08), rgba(96,165,250,.03));
+    padding:84px 0;text-align:center;
+  }
+  .final h2{margin-bottom:14px}
+  .final > .wrap > p{
+    color:var(--text-dim);margin-bottom:26px;font-size:16px;
+  }
+
+  /* MOBILE */
+  @media(max-width:900px){
+    .nav-links{gap:16px}
+    nav .wrap{padding:14px 16px}
+    .wrap{padding:0 16px}
   }
 </style>
 </head>
@@ -275,162 +256,93 @@
 
 <nav>
   <div class="nav-inner">
-    <a class="logo" href="#">X3 <span>API</span></a>
+    <a href="https://x3digitalcapital.com" class="logo">X3 <span>API</span></a>
     <div class="nav-links">
-      <a href="#features" class="hideMobile">Features</a>
-      <a href="#docs" class="hideMobile">Docs</a>
-      <a href="https://x3digitalcapital.com" class="hideMobile">&larr; Main Site</a>
-      <a href="#pricing" class="btn-outline">Get Access</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#docs">Docs</a>
+      <a href="https://x3digitalcapital.com">Main Site</a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
-<header class="hero">
+<section class="hero">
   <div class="wrap">
-    <div class="eyebrow">Trade Intelligence API</div>
+    <p class="eyebrow">Trade Intelligence API</p>
     <h1>Raw trades in,<br><span class="accent">intelligence out.</span></h1>
-    <p class="lede">
-      POST your trade data and get back deterministic metrics, AI-generated scores,
-      risk flags, and prioritized recommendations — in clean, structured JSON.
-      Built for AI agents, trading tools, and developers.
-    </p>
+    <p class="lede">Send us your trade data. Get back deterministic metrics, AI scores, risk flags, and recommendations in structured JSON. Built for agents, bots, and developers.</p>
     <div class="hero-ctas">
-      <a href="#pricing" class="btn-solid">Get Started</a>
+      <a href="#pricing" class="btn-solid">Get Access</a>
       <a href="#docs" class="btn-outline">View Docs</a>
     </div>
   </div>
-</header>
+</section>
 
-<!-- FEATURES -->
 <section id="features">
   <div class="wrap">
     <h2>What you get<span style="color:var(--blue)">.</span></h2>
-    <p class="section-sub">One endpoint. Every response includes computed metrics and full AI analysis.</p>
+    <p class="section-sub">One simple endpoint. Every response includes metrics, AI scores, and recommendations.</p>
     <div class="grid3">
       <div class="feature">
         <h3>Deterministic Metrics</h3>
-        <p>Net P/L, win rate, profit factor, average win/loss, largest win/loss — computed server-side, consistent every time.</p>
+        <p>Net P/L, win rate, profit factor, average win/loss, largest wins/losses — all computed server-side, consistent every time.</p>
       </div>
       <div class="feature">
         <h3>AI Scoring</h3>
-        <p>Five scores from 0–100: overall, risk management, consistency, discipline, and edge clarity — plus a letter grade.</p>
+        <p>Five scores from 0–100: overall, risk management, consistency, discipline, edge clarity — plus a letter grade.</p>
       </div>
       <div class="feature">
         <h3>Risk Flags</h3>
-        <p>Automatic pattern detection: missing stops, insufficient sample size, asymmetric sizing, and more — each with severity.</p>
+        <p>Automatic pattern detection: missing stops, insufficient sample size, asymmetric sizing, and more — each with severity level.</p>
       </div>
       <div class="feature">
         <h3>Recommendations</h3>
-        <p>Prioritized, specific action items so the trader (or the agent) knows exactly what to fix first.</p>
+        <p>Prioritized, specific action items. Know exactly what to improve, and in what order.</p>
       </div>
       <div class="feature">
         <h3>Simple Auth</h3>
         <p>Bearer token authentication with per-key rate limiting and monthly usage metering built in.</p>
       </div>
       <div class="feature">
-        <h3>Agent-Ready JSON</h3>
-        <p>Structured output designed for automation. Parse scores and recommendations programmatically — no scraping, no HTML.</p>
+        <h3>Agent-Ready</h3>
+        <p>Structured output designed for automation. Parse scores and recommendations programmatically — no scraping.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section>
-  <div class="wrap">
-    <h2>How it works<span style="color:var(--blue)">.</span></h2>
-    <p class="section-sub">From payment to first response in minutes.</p>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01</div>
-        <h3>Get a key</h3>
-        <p>Subscribe below. Your API key is delivered to your email.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <h3>Send trades</h3>
-        <p>POST symbol, direction, entry, exit, and quantity. Up to 100 trades per request.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <h3>Get analysis</h3>
-        <p>Metrics, scores, grade, risk flags, and recommendations come back as JSON.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">04</div>
-        <h3>Build on it</h3>
-        <p>Pipe the output into your agent, dashboard, bot, or trading platform.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CODE EXAMPLE -->
-<section>
-  <div class="wrap">
-    <h2>One request<span style="color:var(--blue)">.</span></h2>
-    <p class="section-sub">Here's a real call with two trades. Swap in your own key.</p>
-    <div class="code"><pre><span class="c"># Analyze trades</span>
-curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
-  -H <span class="k">"Authorization: Bearer x3k_live_YOUR_KEY"</span> \
-  -H <span class="k">"Content-Type: application/json"</span> \
-  -d '{
-    "trades": [
-      { "symbol":"XRP", "direction":"long",  "entry":0.5, "exit":1.2,  "qty":100 },
-      { "symbol":"XRP", "direction":"short", "entry":0.5, "exit":0.65, "qty":50 }
-    ]
-  }'</pre></div>
-    <div class="code"><pre><span class="c"># Response (truncated)</span>
-{
-  "object": "trade_analysis",
-  "metrics": { "netPL": 62.5, "winRate": 50, "profitFactor": 9.33, ... },
-  "analysis": {
-    "scores": { "overall": 38, "riskManagement": 45, ... },
-    "grade": "D",
-    "riskFlags": [ { "flag":"no_documented_stops", "severity":"high", ... } ],
-    "recommendations": [ { "action":"Document stop-loss levels...", "priority":1 } ]
-  },
-  "usage": { "month":"2026-08", "callsThisMonth": 1 }
-}</pre></div>
-  </div>
-</section>
-
-<!-- PRICING -->
 <section id="pricing">
   <div class="wrap">
-    <h2 style="text-align:center">Simple pricing<span style="color:var(--blue)">.</span></h2>
-    <p class="section-sub" style="text-align:center;margin-left:auto;margin-right:auto">One plan. No tiers, no metering surprises.</p>
+    <h2>Pricing<span style="color:var(--blue)">.</span></h2>
+    <p class="section-sub">Pay per call. No monthly fees, no quotas. Unlimited access with x402 micropayments.</p>
     <div class="price-card">
-      <div class="plan">Professional</div>
-      <div class="price">$49</div>
-      <div class="price-period">per month</div>
+      <div class="plan">x402 Micropayments</div>
+      <div class="price">$0.12<span style="font-size:24px;color:var(--text-dim)">/call</span></div>
+      <div class="price-period">USDC on Base · Unlimited calls</div>
       <ul class="plist">
-        <li>500 analyses per month</li>
         <li>Up to 100 trades per request</li>
-        <li>Full AI analysis on every call</li>
-        <li>20 calls / minute rate limit</li>
-        <li>Monthly usage reports</li>
-        <li>Email support</li>
+        <li>Deterministic metrics (P/L, win rate, etc)</li>
+        <li>Five AI scores + letter grade</li>
+        <li>Risk flags &amp; recommendations</li>
+        <li>Instant settlement in stablecoins</li>
+        <li>No API keys · No quotas</li>
       </ul>
-      <a href="https://buy.stripe.com/28E28q5gs2dW92g2mD6Zy01" class="btn-solid" style="display:block">Subscribe Now</a>
+      <a href="https://docs.x402.org/getting-started/quickstart-for-sellers" class="btn-solid">Get Started</a>
     </div>
   </div>
 </section>
 
-<!-- DOCS -->
 <section id="docs">
   <div class="wrap">
-    <h2>Documentation<span style="color:var(--blue)">.</span></h2>
-    <p class="section-sub">Everything you need to integrate the API.</p>
+    <h2>Integration<span style="color:var(--blue)">.</span></h2>
+    <p class="section-sub">Get your API key and make your first call in minutes.</p>
 
-    <!-- Quick Reference -->
-    <div class="doc-item">
-      <h4>Quick Reference</h4>
-      <p><strong>Authentication:</strong> <code>Authorization: Bearer x3k_live_YOUR_KEY</code></p>
-      <p><strong>Endpoint:</strong> <code>POST https://alpha.x3digitalcapital.com/api/v1/analyze</code></p>
+    <div class="card" style="margin:26px 0;">
+      <strong>Quick Start</strong>
+      <p><strong>Endpoint:</strong> <code>POST https://alpha.x3digitalcapital.com/api/v1/x402/analyze</code></p>
+      <p><strong>Payment:</strong> x402 (USDC on Base) · <strong>Price:</strong> $0.12 per call</p>
       <p><strong>Required fields:</strong> <code>symbol</code>, <code>direction</code>, <code>entry</code>, <code>exit</code>, <code>qty</code></p>
-      <p><strong>Rate limit:</strong> 20 calls/minute · <strong>Quota:</strong> 500 analyses/month</p>
+      <p><strong>No rate limits · No quotas · Unlimited calls</strong></p>
     </div>
 
     <!-- Toggle for Full Docs -->
@@ -443,30 +355,40 @@ curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
 
       <!-- 1. Make Your First Call -->
       <div class="doc-item">
-        <h4>1. Make your first API call</h4>
-        <p>Use the API key we sent you via email. Replace <code>YOUR_KEY</code> with your actual key:</p>
-        <div class="code"><pre><span class="c"># Analyze a single trade</span>
-curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
-  -H <span class="k">"Authorization: Bearer x3k_live_YOUR_KEY"</span> \
-  -H <span class="k">"Content-Type: application/json"</span> \
-  -d '{
-    "trades": [
-      {
-        "symbol": "XRP",
-        "direction": "long",
-        "entry": 0.5,
-        "exit": 1.2,
-        "qty": 100,
-        "date": "2026-08-09",
-        "notes": "Breakout trade, hit resistance"
-      }
-    ]
-  }'</pre></div>
+        <h4>1. Make your first API call with x402</h4>
+        <p>Use <code>x402-fetch</code> (Node.js) or <code>x402-python</code> (Python) to handle payment. First call returns HTTP 402 with payment instructions:</p>
+        <div class="code"><pre><span class="c">// JavaScript with x402-fetch</span>
+import { x402Fetch } from 'x402-fetch';
+
+const result = await x402Fetch(
+  'https://alpha.x3digitalcapital.com/api/v1/x402/analyze',
+  {
+    walletPrivateKey: process.env.WALLET_KEY,
+    chain: 'base', <span class="c">// Base network for USDC</span>
+    method: 'POST',
+    body: {
+      trades: [
+        {
+          symbol: 'XRP',
+          direction: 'long',
+          entry: 0.5,
+          exit: 1.2,
+          qty: 100,
+          date: '2026-08-09',
+          notes: 'Breakout trade'
+        }
+      ]
+    }
+  }
+);
+
+console.log(result);</pre></div>
       </div>
 
       <!-- 2. Request Format -->
       <div class="doc-item">
-        <h4>2. Request format</h4>
+        <h4>2. Request format & x402 payment</h4>
+        <p><strong>Payment Method:</strong> First request to <code>/api/v1/x402/analyze</code> returns HTTP 402 with payment instructions. Send USDC to the address, retry with payment proof, get your analysis.</p>
         <p><strong>Required fields per trade:</strong></p>
         <ul style="margin:10px 0 10px 20px; line-height:1.8;">
           <li><code>symbol</code> (string): Ticker symbol (e.g., "XRP", "BTC", "ETH")</li>
@@ -480,7 +402,7 @@ curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
           <li><code>date</code> (string): Trade date (YYYY-MM-DD)</li>
           <li><code>notes</code> (string): Entry/exit reasoning, setup, market context</li>
         </ul>
-        <p><strong>Limits:</strong> Up to 100 trades per request.</p>
+        <p><strong>Limits:</strong> Up to 100 trades per request · No rate limits · Unlimited calls</p>
       </div>
 
       <!-- 3. Response Explained -->
@@ -515,49 +437,56 @@ curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
   "error": "invalid_trade",
   "message": "Each trade needs: symbol, direction, entry, exit, qty"
 }</pre></div>
-        <p><strong>Monthly quota exceeded:</strong></p>
-        <div class="code"><pre>{
-  "error": "Monthly quota exceeded",
-  "message": "You've used all 500 analyses for this month. Your quota resets on the 1st (UTC).",
-  "quota": {
-    "tier": "Professional",
-    "used": 500,
-    "limit": 500,
-    "remaining": 0,
-    "resetTime": "1st of next month (UTC)"
+        <p><strong>Payment required (x402):</strong></p>
+        <div class="code"><pre>HTTP 402 Payment Required
+{
+  "error": "payment_required",
+  "message": "Send $0.12 USDC to address below, then retry",
+  "x402": {
+    "price": "$0.12",
+    "network": "base",
+    "paymentAddress": "0x...",
+    "stablecoin": "USDC"
   }
 }</pre></div>
-        <p><strong>Unauthorized (invalid API key):</strong></p>
+        <p><strong>Insufficient payment:</strong></p>
         <div class="code"><pre>{
-  "error": "Unauthorized",
-  "message": "Invalid or missing API key"
+  "error": "insufficient_payment",
+  "message": "Payment received but amount is less than $0.12"
 }</pre></div>
       </div>
 
       <!-- 5. Portfolio Example -->
       <div class="doc-item">
         <h4>5. Example: Portfolio analysis (5 trades)</h4>
-        <div class="code"><pre><span class="c"># Analyze a portfolio of trades</span>
-curl -X POST https://alpha.x3digitalcapital.com/api/v1/analyze \
-  -H <span class="k">"Authorization: Bearer x3k_live_YOUR_KEY"</span> \
-  -H <span class="k">"Content-Type: application/json"</span> \
-  -d '{
-    "trades": [
-      {"symbol":"XRP","direction":"long","entry":0.50,"exit":0.75,"qty":100,"date":"2026-08-05"},
-      {"symbol":"BTC","direction":"short","entry":45000,"exit":42000,"qty":0.1,"date":"2026-08-06"},
-      {"symbol":"ETH","direction":"long","entry":2000,"exit":1950,"qty":1,"date":"2026-08-07"},
-      {"symbol":"XRP","direction":"long","entry":0.75,"exit":1.10,"qty":50,"date":"2026-08-08"},
-      {"symbol":"SOL","direction":"long","entry":150,"exit":160,"qty":10,"date":"2026-08-09"}
+        <div class="code"><pre><span class="c">// Python with x402-python</span>
+from x402 import x402_fetch
+
+result = x402_fetch(
+  'https://alpha.x3digitalcapital.com/api/v1/x402/analyze',
+  wallet_key=os.getenv('WALLET_KEY'),
+  chain='base',
+  method='POST',
+  body={
+    'trades': [
+      {'symbol':'XRP','direction':'long','entry':0.50,'exit':0.75,'qty':100,'date':'2026-08-05'},
+      {'symbol':'BTC','direction':'short','entry':45000,'exit':42000,'qty':0.1,'date':'2026-08-06'},
+      {'symbol':'ETH','direction':'long','entry':2000,'exit':1950,'qty':1,'date':'2026-08-07'},
+      {'symbol':'XRP','direction':'long','entry':0.75,'exit':1.10,'qty':50,'date':'2026-08-08'},
+      {'symbol':'SOL','direction':'long','entry':150,'exit':160,'qty':10,'date':'2026-08-09'}
     ]
-  }'</pre></div>
+  }
+)
+
+print(result)</pre></div>
       </div>
 
       <!-- 6. Rate Limits -->
       <div class="doc-item">
         <h4>6. Rate limits & quotas</h4>
-        <p><strong>Rate limit:</strong> 20 calls per minute per API key</p>
-        <p><strong>Monthly quota:</strong> 500 analyses per month per key (resets 1st UTC)</p>
-        <p><strong>Check your usage:</strong> Every response includes a <code>usage</code> object showing your current month's call count and remaining quota.</p>
+        <p><strong>No rate limits.</strong> x402 is pay-per-call, so you can make unlimited requests.</p>
+        <p><strong>No monthly quotas.</strong> No caps, no resets, no surprises. You pay $0.12 for each analysis.</p>
+        <p><strong>Pricing:</strong> $0.12 per call (100 calls = $12, 1,000 calls = $120, etc)</p>
       </div>
 
       <!-- 7. Support -->
