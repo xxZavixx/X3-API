@@ -22,7 +22,10 @@ dotenv.config();
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const DEPOSIT_ADDRESS = process.env.DEPOSIT_ADDRESS?.toLowerCase();
 const CDP_API_KEY_ID = process.env.CDP_API_KEY_ID;
-const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET;
+const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET
+  ?.trim()
+  .replace(/^"([\s\S]*)"$/, "$1")
+  .replace(/\\n/g, "\n");
 
 if (!STRIPE_SECRET_KEY || !DEPOSIT_ADDRESS || !CDP_API_KEY_ID || !CDP_API_KEY_SECRET) {
   console.error("Missing required environment variables!");
