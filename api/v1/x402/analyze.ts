@@ -50,7 +50,7 @@ app.use(
     {
       "POST /api/v1/x402/analyze": {
         price: "$0.12", // Price per request
-        network: "eip155:8453", // Base mainnet
+        network: "base", // Base mainnet
         config: {
           description: "Trade intelligence analysis with AI",
           mimeType: "application/json",
@@ -304,7 +304,7 @@ async function getClaudeAnalysis(trades: any[], metrics: any) {
 console.log("🚀 X3 API Starting");
 console.log("📍 Payment Middleware: x402-hono");
 console.log(`💰 Price: $0.12 per request`);
-console.log(`🔗 Network: Base (eip155:8453)`);
+console.log(`🔗 Network: Base (base)`);
 console.log(`📬 Receiving Address: ${DEPOSIT_ADDRESS}`);
 console.log("✅ Ready to accept x402 payments!");
 
