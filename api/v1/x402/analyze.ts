@@ -8,6 +8,7 @@
 
 import dotenv from "dotenv";
 import { createX402Server } from "@coinbase/cdp-sdk/x402";
+import { paymentMiddlewareFromHTTPServer } from "@x402/hono";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import Stripe from "stripe";
@@ -35,6 +36,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY || "", {
 
 // ============ CREATE X402 SERVER ============
 let x402Server: any = null;
+let x402PaymentMiddleware: any = null;
 
 async function initializeX402Server() {
   try {
@@ -55,6 +57,13 @@ async function initializeX402Server() {
 
     console.log("✅ X402 server initialized successfully");
     console.log(`📍 Paying to: ${x402Server.payToEvmAddress}`);
+
+    x402PaymentMiddleware = paymentMiddlewareFromHTTPServer(
+      x402Server,
+      undefined,
+      undefined,
+      false,
+    );
 
     // Listen for settlements
     x402Server.on("settlement", async (settlement: any) => {
@@ -98,11 +107,19 @@ app.get("/api/health", (c) => {
 });
 
 // ============ X3 API ENDPOINT - REQUIRES PAYMENT ============
+app.use("/api/v1/x402/analyze", async (c, next) => {
+  if (!x402PaymentMiddleware) {
+    return c.json(
+      { error: "payment_unavailable", message: "Payment service is initializing" },
+      { status: 503 },
+    );
+  }
+
+  return x402PaymentMiddleware(c, next);
+});
+
 app.post("/api/v1/x402/analyze", async (c) => {
   try {
-    // Get the x402 payment data from headers
-    const x402Payment = c.req.header("x-x402-payment");
-    
     const body = await c.req.json();
     const { trades } = body;
 
@@ -174,7 +191,7 @@ app.post("/api/v1/x402/analyze", async (c) => {
     }
 
     console.log(`📊 Processing analysis for ${trades.length} trades`);
-    console.log(`💳 Payment info: ${x402Payment ? "present" : "not present"}`);
+    console.log("💳 Payment verified by x402 middleware");
 
     // ============ CALCULATE METRICS ============
     const metrics = calculateMetrics(trades);
@@ -193,7 +210,7 @@ app.post("/api/v1/x402/analyze", async (c) => {
         price: "$0.12",
         network: "base",
         currency: "USDC",
-        received: !!x402Payment,
+        received: true,
       },
       timestamp: new Date().toISOString(),
     });
