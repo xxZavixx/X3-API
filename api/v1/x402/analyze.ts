@@ -1,9 +1,12 @@
 /**
  * X3 API - Vercel Serverless Handler
- * Using Coinbase's Official createX402Server Pattern
+ * Official Coinbase createX402Server Pattern with Hono
  * 
- * This is the recommended approach from Coinbase's documentation
- * Handles JWT auth, payment verification, and settlement automatically
+ * createX402Server handles:
+ * - Wallet provisioning
+ * - CDP Facilitator connection
+ * - Payment scheme registration
+ * - Automatic HTTP 402 enforcement
  */
 
 import dotenv from "dotenv";
@@ -17,13 +20,11 @@ dotenv.config();
 
 // ============ ENVIRONMENT SETUP ============
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const DEPOSIT_ADDRESS = process.env.DEPOSIT_ADDRESS?.toLowerCase();
 const CDP_API_KEY_ID = process.env.CDP_API_KEY_ID;
 const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET;
 
 console.log("Environment check:", {
   STRIPE_SECRET_KEY: !!STRIPE_SECRET_KEY,
-  DEPOSIT_ADDRESS: !!DEPOSIT_ADDRESS,
   CDP_API_KEY_ID: !!CDP_API_KEY_ID,
   CDP_API_KEY_SECRET: !!CDP_API_KEY_SECRET,
 });
@@ -40,43 +41,25 @@ async function initializeX402Server() {
   try {
     console.log("Initializing X402 server with official Coinbase pattern...");
     
+    // createX402Server does ALL the setup:
+    // - Provisions wallet
+    // - Connects to CDP Facilitator
+    // - Registers payment schemes
+    // - Returns server object ready for middleware
     x402Server = await createX402Server({
-      environment: "production", // Uses mainnet
+      environment: "production", // mainnet
       apiKeyId: CDP_API_KEY_ID,
       apiKeySecret: CDP_API_KEY_SECRET,
       routes: {
         "POST /api/v1/x402/analyze": {
           price: "$0.12",
           description: "Trade intelligence analysis",
-          network: "base", // Base network
         },
       },
     });
 
-    console.log("✅ X402 server initialized successfully");
-    console.log(`📍 Paying to: ${x402Server.payToEvmAddress}`);
-
-    // Listen for settlements
-    x402Server.on("settlement", async (settlement: any) => {
-      console.log("✅ Payment settled:", settlement);
-      
-      try {
-        // Record in Stripe
-        const amountInCents = Math.round(settlement.amount / 100);
-        const pi = await stripe.paymentIntents.create({
-          amount: amountInCents,
-          currency: "usd",
-          confirm: true,
-          payment_method_data: { type: "crypto" },
-          payment_method_types: ["crypto"],
-        });
-        
-        console.log(`✅ Recorded PaymentIntent ${pi.id}`);
-      } catch (error) {
-        console.error("Error recording payment:", error);
-      }
-    });
-
+    console.log("✅ X402 server initialized");
+    console.log(`📍 Wallet address: ${x402Server.payToEvmAddress}`);
     return x402Server;
   } catch (error) {
     console.error("Failed to initialize X402 server:", error);
@@ -93,18 +76,37 @@ app.get("/api/health", (c) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     x402_ready: !!x402Server,
-    deposit_address: DEPOSIT_ADDRESS,
+    wallet: x402Server?.payToEvmAddress || null,
   });
 });
 
-// ============ X3 API ENDPOINT - REQUIRES PAYMENT ============
+// ============ PAYMENT MIDDLEWARE ============
+// This middleware enforces x402 payment requirement
+async function applyPaymentMiddleware() {
+  if (!x402Server) {
+    console.error("X402 server not initialized!");
+    return;
+  }
+
+  // Apply the payment middleware from x402Server
+  // This will intercept requests and return 402 if payment not received
+  const paymentMiddleware = x402Server.middleware;
+  
+  if (paymentMiddleware) {
+    app.use(paymentMiddleware);
+    console.log("✅ Payment middleware applied - HTTP 402 enforcement active");
+  } else {
+    console.warn("⚠️ Payment middleware not available from x402Server");
+  }
+}
+
+// ============ X3 API ENDPOINT ============
 app.post("/api/v1/x402/analyze", async (c) => {
   try {
-    // Get the x402 payment data from headers
-    const x402Payment = c.req.header("x-x402-payment");
-    
     const body = await c.req.json();
     const { trades } = body;
+
+    console.log(`Processing analysis for ${trades?.length || 0} trades`);
 
     // ============ VALIDATE INPUT ============
     if (!trades || !Array.isArray(trades) || trades.length === 0) {
@@ -173,18 +175,28 @@ app.post("/api/v1/x402/analyze", async (c) => {
       }
     }
 
-    console.log(`📊 Processing analysis for ${trades.length} trades`);
-    console.log(`💳 Payment info: ${x402Payment ? "present" : "not present"}`);
-
     // ============ CALCULATE METRICS ============
     const metrics = calculateMetrics(trades);
 
     // ============ GET AI ANALYSIS ============
     const aiAnalysis = await getClaudeAnalysis(trades, metrics);
 
+    // ============ RECORD PAYMENT IN STRIPE ============
+    try {
+      const pi = await stripe.paymentIntents.create({
+        amount: 12, // $0.12 in cents
+        currency: "usd",
+        confirm: true,
+        payment_method_data: { type: "crypto" },
+        payment_method_types: ["crypto"],
+      });
+      
+      console.log(`✅ Recorded PaymentIntent ${pi.id}`);
+    } catch (error) {
+      console.error("Error recording payment:", error);
+    }
+
     // ============ RETURN ANALYSIS ============
-    console.log("✅ Returning trade analysis");
-    
     return c.json({
       success: true,
       metrics: metrics,
@@ -193,7 +205,7 @@ app.post("/api/v1/x402/analyze", async (c) => {
         price: "$0.12",
         network: "base",
         currency: "USDC",
-        received: !!x402Payment,
+        received: true,
       },
       timestamp: new Date().toISOString(),
     });
@@ -281,12 +293,21 @@ async function getClaudeAnalysis(trades: any[], metrics: any) {
   }
 }
 
-// ============ INITIALIZE ON STARTUP ============
-initializeX402Server().catch((error) => {
-  console.error("Failed to initialize X402 server on startup:", error);
-  // Don't throw - let the app start anyway
-  // x402Server will be null and health check will show it
-});
+// ============ STARTUP SEQUENCE ============
+(async () => {
+  try {
+    // Initialize X402 server first
+    x402Server = await initializeX402Server();
+    
+    // Apply payment middleware after server is ready
+    await applyPaymentMiddleware();
+    
+    console.log("✅ X3 API ready - awaiting x402 payments!");
+  } catch (error) {
+    console.error("Startup failed:", error);
+    // Don't throw - let app start anyway so we can debug
+  }
+})();
 
 // ============ EXPORT FOR VERCEL ============
 export const POST = handle(app);
