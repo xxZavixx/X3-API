@@ -11,7 +11,6 @@ import { createFacilitatorConfig } from "@coinbase/x402";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { paymentMiddleware, x402ResourceServer } from "@x402/hono";
-import { getAuthHeaders } from "@coinbase/cdp-sdk/auth";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import Stripe from "stripe";
@@ -38,24 +37,6 @@ if (!STRIPE_SECRET_KEY || !DEPOSIT_ADDRESS || !CDP_API_KEY_ID || !CDP_API_KEY_SE
 // ============ INITIALIZE APP ============
 const app = new Hono();
 
-// ============ HELPER: Generate JWT Auth Headers ============
-async function generateAuthHeaders(requestPath: string) {
-  try {
-    const headers = await getAuthHeaders({
-      apiKeyId: CDP_API_KEY_ID!,
-      apiKeySecret: CDP_API_KEY_SECRET!,
-      requestMethod: "POST",
-      requestHost: "api.cdp.coinbase.com",
-      requestPath: requestPath,
-      expiresIn: 120,
-    });
-    return headers;
-  } catch (error) {
-    console.error("Error generating auth headers:", error);
-    throw error;
-  }
-}
-
 // ============ INITIALIZE FACILITATOR ============
 let facilitatorClient;
 let resourceServer;
@@ -64,14 +45,9 @@ if (CDP_API_KEY_ID && CDP_API_KEY_SECRET) {
   try {
     console.log("Initializing facilitator with JWT authentication...");
     
-    // Create facilitator config with Coinbase production endpoint
+    // createFacilitatorConfig generates Coinbase JWT headers per request.
     facilitatorClient = new HTTPFacilitatorClient(
       createFacilitatorConfig(CDP_API_KEY_ID, CDP_API_KEY_SECRET),
-      {
-        // Use production Coinbase facilitator endpoint
-        facilitatorUrl: "https://api.cdp.coinbase.com/platform/v2/x402",
-        // Auth headers will be generated per-request by getAuthHeaders
-      }
     );
 
     resourceServer = new x402ResourceServer(facilitatorClient).register(
