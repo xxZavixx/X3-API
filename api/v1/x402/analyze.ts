@@ -1,24 +1,18 @@
 /**
  * X3 API - Vercel Serverless Handler
- * Official Coinbase CDP Facilitator Pattern
+ * Using Official x402-hono Package for HTTP 402 Enforcement
  * 
- * Uses createCdpFacilitatorClient() which:
- * - Authenticates with CDP API key
- * - Validates signatures
- * - Screens transactions (OFAC/KYT)
- * - Submits settlement onchain
- * - Reports results automatically
- * 
- * No manual blockchain verification needed!
+ * x402-hono is specifically designed for:
+ * - Hono framework
+ * - Vercel serverless functions
+ * - Proper HTTP 402 middleware enforcement
+ * - Clean payment integration
  */
 
 import dotenv from "dotenv";
-import { createCdpFacilitatorClient } from "@coinbase/cdp-sdk/x402";
-import { x402ResourceServer } from "@x402/core/server";
-import { ExactEvmScheme } from "@x402/evm/exact/server";
-import { paymentMiddleware } from "@x402/hono";
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
+import { paymentMiddleware } from "x402-hono";
 import Stripe from "stripe";
 
 // Load environment variables
@@ -26,112 +20,50 @@ dotenv.config();
 
 // ============ ENVIRONMENT SETUP ============
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const DEPOSIT_ADDRESS = process.env.DEPOSIT_ADDRESS?.toLowerCase();
-const CDP_API_KEY_ID = process.env.CDP_API_KEY_ID;
-const CDP_API_KEY_SECRET = process.env.CDP_API_KEY_SECRET;
+const DEPOSIT_ADDRESS = process.env.DEPOSIT_ADDRESS;
 
 console.log("Environment check:", {
   STRIPE_SECRET_KEY: !!STRIPE_SECRET_KEY,
   DEPOSIT_ADDRESS: !!DEPOSIT_ADDRESS,
-  CDP_API_KEY_ID: !!CDP_API_KEY_ID,
-  CDP_API_KEY_SECRET: !!CDP_API_KEY_SECRET,
 });
+
+if (!DEPOSIT_ADDRESS) {
+  throw new Error("DEPOSIT_ADDRESS environment variable is required");
+}
 
 // ============ INITIALIZE STRIPE ============
 const stripe = new Stripe(STRIPE_SECRET_KEY || "", {
   apiVersion: "2026-05-27.preview",
 });
 
-// ============ INITIALIZE CDP FACILITATOR ============
-let facilitatorClient: any = null;
-let resourceServer: any = null;
-
-async function initializeFacilitator() {
-  try {
-    console.log("Initializing CDP Facilitator client...");
-
-    // Use the official Coinbase CDP Facilitator client
-    // This automatically handles:
-    // - Authentication with CDP API key
-    // - Signature validation
-    // - Transaction screening (OFAC/KYT)
-    // - Onchain settlement
-    // - Result reporting
-    facilitatorClient = createCdpFacilitatorClient();
-
-    console.log("✅ CDP Facilitator client created");
-
-    // Create x402 resource server with the facilitator
-    resourceServer = new x402ResourceServer(facilitatorClient).register(
-      "eip155:8453", // Base network
-      new ExactEvmScheme(),
-    );
-
-    console.log("✅ x402 Resource Server initialized");
-
-    // Hook into payment lifecycle events
-    setupPaymentHooks();
-
-    return resourceServer;
-  } catch (error) {
-    console.error("Failed to initialize CDP Facilitator:", error);
-    throw error;
-  }
-}
-
-// ============ SETUP PAYMENT LIFECYCLE HOOKS ============
-function setupPaymentHooks() {
-  if (!resourceServer) return;
-
-  // Called after payment is verified and settled
-  resourceServer.onAfterSettle(async (event: any) => {
-    try {
-      console.log("✅ Payment settled successfully");
-      console.log("Settlement details:", {
-        network: event.result.network,
-        transaction: event.result.transaction,
-        amount: event.requirements.amount,
-      });
-
-      // Record in Stripe
-      const amountInCents = Math.round(Number(event.requirements.amount) / 10000);
-      
-      const pi = await stripe.paymentIntents.create(
-        {
-          amount: amountInCents,
-          currency: "usd",
-          confirm: true,
-          payment_method_data: { type: "crypto" },
-          payment_method_types: ["crypto"],
-          description: `x402 payment - ${event.result.transaction}`,
-        },
-        { idempotencyKey: event.result.transaction }
-      );
-
-      console.log(`✅ Recorded PaymentIntent ${pi.id}`);
-    } catch (error) {
-      console.error("Error recording payment in Stripe:", error);
-    }
-  });
-
-  // Called if settlement fails
-  resourceServer.onSettleFailure(async (event: any) => {
-    console.error("❌ Settlement failed:", event.error);
-  });
-
-  // Called after payment is verified
-  resourceServer.onAfterVerify(async (event: any) => {
-    console.log("✅ Payment verified by CDP Facilitator");
-  });
-
-  // Called if verification fails
-  resourceServer.onVerifyFailure(async (event: any) => {
-    console.error("❌ Payment verification failed:", event.error);
-  });
-}
-
 // ============ INITIALIZE APP ============
 const app = new Hono();
+
+// ============ CONFIGURE PAYMENT MIDDLEWARE ============
+// This middleware will:
+// 1. Intercept requests to protected routes
+// 2. Return HTTP 402 if no payment provided
+// 3. Verify payment before allowing access
+app.use(
+  paymentMiddleware(
+    DEPOSIT_ADDRESS, // Where to receive payment
+    {
+      "POST /api/v1/x402/analyze": {
+        price: "$0.12", // Price per request
+        network: "eip155:8453", // Base mainnet
+        config: {
+          description: "Trade intelligence analysis with AI",
+          mimeType: "application/json",
+          maxTimeoutSeconds: 300,
+        },
+      },
+    },
+    {
+      // Facilitator configuration (optional)
+      url: "https://api.cdp.coinbase.com/platform/v2/x402",
+    }
+  )
+);
 
 // ============ HEALTH CHECK ============
 app.get("/api/health", (c) => {
@@ -139,42 +71,24 @@ app.get("/api/health", (c) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     deposit_address: DEPOSIT_ADDRESS,
-    facilitator: resourceServer ? "ready" : "initializing",
-    facilitator_type: "cdp",
+    payment_middleware: "x402-hono",
+    network: "base",
+    price_per_request: "$0.12",
   });
 });
 
-// ============ APPLY PAYMENT MIDDLEWARE ============
-// This middleware enforces HTTP 402 before route handler
-if (resourceServer) {
-  app.use(
-    paymentMiddleware(
-      {
-        "POST /api/v1/x402/analyze": {
-          accepts: [
-            {
-              scheme: "exact",
-              price: "$0.12",
-              network: "eip155:8453",
-              payTo: DEPOSIT_ADDRESS,
-            },
-          ],
-          description: "Trade intelligence analysis",
-          mimeType: "application/json",
-        },
-      },
-      resourceServer,
-    ),
-  );
-}
-
-// ============ X3 API ENDPOINT ============
+// ============ X3 API ENDPOINT - PAYMENT ENFORCED BY MIDDLEWARE ============
+// At this point, the x402-hono middleware has already:
+// - Checked if payment was provided
+// - Returned HTTP 402 if no payment
+// - Verified the payment signature
+// - This route handler only runs if payment is valid!
 app.post("/api/v1/x402/analyze", async (c) => {
   try {
     const body = await c.req.json();
     const { trades } = body;
 
-    console.log(`Processing analysis for ${trades?.length || 0} trades`);
+    console.log(`✅ Processing analysis for ${trades?.length || 0} trades (payment verified by x402-hono)`);
 
     // ============ VALIDATE INPUT ============
     if (!trades || !Array.isArray(trades) || trades.length === 0) {
@@ -249,10 +163,31 @@ app.post("/api/v1/x402/analyze", async (c) => {
     // ============ GET AI ANALYSIS ============
     const aiAnalysis = await getClaudeAnalysis(trades, metrics);
 
-    // ============ RETURN ANALYSIS ============
-    // At this point, payment has been verified by CDP Facilitator
-    // (middleware already enforced 402 if no valid payment)
-    console.log("✅ Returning trade analysis (payment verified by CDP Facilitator)");
+    // ============ RECORD PAYMENT IN STRIPE ============
+    try {
+      // Get payment info from request context if available
+      const paymentHash = c.req.header("x-payment-hash") || "x402-verified";
+      
+      const pi = await stripe.paymentIntents.create(
+        {
+          amount: 12, // $0.12 in cents
+          currency: "usd",
+          confirm: true,
+          payment_method_data: { type: "crypto" },
+          payment_method_types: ["crypto"],
+          description: "X3 API - Trade analysis",
+        },
+        { idempotencyKey: paymentHash }
+      );
+
+      console.log(`✅ Recorded PaymentIntent ${pi.id}`);
+    } catch (error) {
+      console.error("Error recording payment in Stripe:", error);
+      // Don't fail - payment was already verified by x402-hono
+    }
+
+    // ============ RETURN ANALYSIS - HTTP 200 ============
+    console.log("✅ Returning trade analysis (payment verified)");
 
     return c.json({
       success: true,
@@ -262,7 +197,7 @@ app.post("/api/v1/x402/analyze", async (c) => {
         price: "$0.12",
         network: "base",
         currency: "USDC",
-        facilitator: "cdp",
+        facilitator: "x402-hono",
         status: "verified",
       },
       timestamp: new Date().toISOString(),
@@ -278,6 +213,19 @@ app.post("/api/v1/x402/analyze", async (c) => {
       { status: 500 }
     );
   }
+});
+
+// ============ CATCH-ALL - PUBLIC ROUTES ============
+app.get("/", (c) => {
+  return c.json({
+    name: "X3 API",
+    version: "1.0.0",
+    description: "Trade intelligence API with x402 micropayments",
+    endpoints: {
+      health: "/api/health",
+      analyze: "/api/v1/x402/analyze (requires $0.12 USDC payment)",
+    },
+  });
 });
 
 // ============ HELPER: CALCULATE METRICS ============
@@ -303,7 +251,8 @@ function calculateMetrics(trades: any[]) {
 
   const totalTrades = trades.length;
   const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
-  const profitFactor = totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? 999 : 0;
+  const profitFactor =
+    totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? 999 : 0;
   const avgWin = winCount > 0 ? totalWins / winCount : 0;
   const avgLoss = lossCount > 0 ? totalLosses / lossCount : 0;
 
@@ -351,25 +300,13 @@ async function getClaudeAnalysis(trades: any[], metrics: any) {
   }
 }
 
-// ============ STARTUP SEQUENCE ============
-(async () => {
-  try {
-    console.log("🚀 Starting X3 API...");
-    
-    // Initialize the CDP Facilitator
-    // This must complete before the app starts handling requests
-    await initializeFacilitator();
-    
-    console.log("✅ X3 API ready to accept x402 payments!");
-    console.log("📍 Payment flows through official CDP Facilitator");
-    console.log("💰 Price: $0.12 per request");
-    console.log("🔗 Network: Base (eip155:8453)");
-  } catch (error) {
-    console.error("❌ Failed to start X3 API:", error);
-    // Don't throw - let app start anyway for debugging
-    // In production, you might want to fail hard here
-  }
-})();
+// ============ STARTUP LOG ============
+console.log("🚀 X3 API Starting");
+console.log("📍 Payment Middleware: x402-hono");
+console.log(`💰 Price: $0.12 per request`);
+console.log(`🔗 Network: Base (eip155:8453)`);
+console.log(`📬 Receiving Address: ${DEPOSIT_ADDRESS}`);
+console.log("✅ Ready to accept x402 payments!");
 
 // ============ EXPORT FOR VERCEL ============
 export const POST = handle(app);
